@@ -1,6 +1,6 @@
 import './App.css';
 import { BrowserRouter as Router, Route, Switch, Link } from "react-router-dom";
-import Login from './Login';
+import LoginForm from './LoginForm';
 
 function App() {
   return (
@@ -12,7 +12,7 @@ function App() {
         </div>
         <Switch>
           <Route path="/login">
-            <Login />
+            <LoginForm />
           </Route>
         </Switch>
       </Router>
