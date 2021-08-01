@@ -1,9 +1,11 @@
 import "./LoginForm.css";
 import { useEffect, useState } from "react";
+import { useHistory } from "react-router-dom";
 
 const LoginForm = () => {
     // Static Variables
     const EMAIL_MATCH = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/igm;
+    const PHONENUMBER_MATCH = /^(?:(?:\+?1\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{4})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?$/gm;
     const MINIMUM_NAME_LENGTH = 2;
     const MINIMUM_PASSWORD_LENGTH = 8;
     
@@ -18,25 +20,28 @@ const LoginForm = () => {
     const [lastName, setLastName] = useState({"last-name": "", "valid": false, "style": validInput});
     const [emailAddress, setEmailAddress] = useState({"email-address": "", "valid": false, "style": validInput});
     const [password, setPassword] = useState({"password": "", "valid": false, "style": validInput});
-    const [confirmPassword, setConfirmPassword] = useState({"confirm-password": "", "valid": true, "style": validInput});
-    const [submit, setSubmit] = useState({"empty": true, "valid": false});
+    const [confirmPassword, setConfirmPassword] = useState({"confirm-password": "", "valid": false, "style": validInput});
+    const [phoneNumber, setPhoneNumber] = useState({"phone-number": "", "valid": false, "style": validInput});
+    const [submit, setSubmit] = useState({"valid": false});
+    const [data, setData] = useState({}); // eslint-disable-line no-unused-vars
+    const history = useHistory();
 
     // Cheesy useEffect to make the password confirm update when you update the password
     useEffect(() => {
-        vConfirmPassword("");
+        vConfirmPassword(confirmPassword["confirm-password"]);
     }, [password]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
-        submitForm();
+        isValid();
     }, [firstName,lastName,emailAddress,password,confirmPassword]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const isEmpty = (input) => {
-        const field = String(input);
-        if (field === "") {
-            return true;
+    // Check to see if all fields are valid, and if so, set submit valid param to be valid
+    const isValid = () => {
+        if (firstName.valid && lastName.valid && emailAddress.valid && password.valid && confirmPassword.valid) {
+            setSubmit({...submit, "valid": true});
         }
         else {
-            return false;
+            setSubmit({...submit, "valid": false});
         };
     };
 
@@ -126,18 +131,33 @@ const LoginForm = () => {
         };
     };
 
-    //Check if all fields are valid and then redirect to some page
-    const submitForm = () => {
-        if ((firstName["first-name"] || lastName["last-name"] || emailAddress["email-address"] || password.password || confirmPassword["confirm-password"]) === "") {
-            setSubmit({"empty": true, valid: false})
-            console.log("all fields empty")
-        }
-        else if (firstName.valid && lastName.valid && emailAddress.valid && password.valid && confirmPassword.valid) {
-            //TODO: redirect to some AMAZING page
+    // Validate Phone Number 
+    const vPhoneNumber = (e) => {
+        // e.preventDefault();
+        const thisPhoneNumber = String(e);
+        // console.log(`PhoneNumber passed to vPhoneNumber = "${thisPhoneNumber}"`);
+
+        // If valid, set Confirm Phone Number, otherwise update styling
+        if (PHONENUMBER_MATCH.test(thisPhoneNumber)) {
+            setPhoneNumber({"phone-number": thisPhoneNumber, "valid": true, "style": validInput});
+            // console.log(`PhoneNumber "${thisPhoneNumber}" is valid`);
         }
         else {
-            //TODO: make it fix the fields and display something that says to fix the fields
-        }
+            setPhoneNumber({"phone-number": thisPhoneNumber, "valid": false, "style": invalidInput});
+            // console.log(`PhoneNumber "${thisPhoneNumber}" is not valid`);
+        };
+    };
+
+    //Check if all fields are valid and then redirect to some page
+    const submitForm = () => {
+        setData({
+            "firstName": firstName["first-name"],
+            "lastName": lastName["last-name"],
+            "emailAddress": emailAddress["email-address"],
+            "password": password.password
+        });
+        history.push("/success");
+        //TODO: make it fix the fields and display something that says to fix the fields
     }
     return (
         <div className="login-form">
@@ -153,7 +173,6 @@ const LoginForm = () => {
                         style={firstName.style}
                         required
                     />
-                </label>
                 <label htmlFor="last-name" style={lastName.style}>
                     <p hidden={lastName.valid}>Last Name must be at least 2 characters long</p>   
                     Last Name
@@ -165,6 +184,7 @@ const LoginForm = () => {
                         style={lastName.style}
                         required
                     />
+                </label>
                 </label>
                 <label htmlFor="email-address" style={emailAddress.style}>
                     <p hidden={emailAddress.valid}>Please enter a valid email address</p>  
@@ -202,10 +222,20 @@ const LoginForm = () => {
                         required
                     />
                 </label>
+                <label htmlFor="phone-number" style={phoneNumber.style}>
+                    <p hidden={phoneNumber.valid}>Please enter a valid phone number</p>  
+                    Phone Number (Optional)
+                    <input 
+                        id="phoneNumber"
+                        value={phoneNumber["phoneNumber"]}
+                        placeholder="Phone Number"
+                        onChange={(e) => vPhoneNumber(e.target.value)}
+                        style={phoneNumber.style}
+                    />
+                </label>
                 <div>
-                    <p hidden={submit.valid}>Please fix the errors above</p>
-                    <p hidden={!submit.empty}>Please fill out all fields</p>
-                    <button type="submit" onClick={submitForm}>Submit</button>
+                    <p hidden={submit.valid} style={invalidInput}>Please fix the errors above</p>
+                    <button type="button" onClick={submitForm} disabled={!submit.valid}>Submit</button>
                 </div>
             </form>
         </div>
