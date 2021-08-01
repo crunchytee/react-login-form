@@ -1,0 +1,13 @@
+
+ /* This doesn't work, but i'd like it to justify the form inputs to the left  */
+div {
+    justify-items: left;
+}
+
+label {
+    display: block;
+}
+
+.first-name {
+    color: black;
+}
